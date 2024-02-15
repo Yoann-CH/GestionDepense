@@ -17,7 +17,7 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
         userProfileDao.delete(userProfile)
     }
 
-    fun getUserProfileById(id: Int): UserProfile {
+    suspend fun getUserProfileById(id: Int): UserProfile {
         return userProfileDao.getUserProfileById(id)
     }
 

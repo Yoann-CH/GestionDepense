@@ -64,7 +64,7 @@ fun UserProfileScreen(userProfileViewModel: UserProfileViewModel = viewModel(), 
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    exchangeRates?.rates?.keys?.sorted()?.forEach { rate ->
+                    exchangeRates?.conversion_rates?.keys?.sorted()?.forEach { rate ->
                         DropdownMenuItem(
                             text = { Text(rate) },
                             onClick = {

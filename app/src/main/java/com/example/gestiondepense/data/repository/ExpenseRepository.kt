@@ -17,19 +17,19 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
         expenseDao.delete(expense)
     }
 
-    fun getAllExpenses(): List<Expense> {
+    suspend fun getAllExpenses(): List<Expense> {
         return expenseDao.getAllExpenses()
     }
 
-    fun getExpenseById(id: Int): Expense {
+    suspend fun getExpenseById(id: Int): Expense {
         return expenseDao.getExpenseById(id)
     }
 
-    fun getExpensesByCategory(category: String): List<Expense> {
+    suspend fun getExpensesByCategory(category: String): List<Expense> {
         return expenseDao.getExpensesByCategory(category)
     }
 
-    fun getFavoriteExpenses(): List<Expense> {
+    suspend fun getFavoriteExpenses(): List<Expense> {
         return expenseDao.getFavoriteExpenses()
     }
 }

@@ -29,7 +29,7 @@ fun ExpensesListScreen(navController: NavController, expenseViewModel: ExpenseVi
             TopAppBar(
                 title = { Text("Liste des Dépenses") },
                 actions = {
-                    IconButton(onClick = { /* Naviguer vers l'écran de création de dépense */ }) {
+                    IconButton(onClick = { navController.navigate("mainScreen/addExpense") }) {
                         Icon(Icons.Filled.Add, contentDescription = "Ajouter")
                     }
                 }
@@ -61,7 +61,7 @@ fun ExpenseItem(expense: Expense, onEdit: () -> Unit, onDelete: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(expense.expenseType, modifier = Modifier.weight(1f))
+        Text(expense.category, modifier = Modifier.weight(1f))
         IconButton(onClick = onEdit) {
             Icon(Icons.Filled.Edit, contentDescription = "Modifier")
         }

@@ -10,16 +10,16 @@ import com.example.gestiondepense.data.database.entity.UserProfile
 @Dao
 interface UserProfileDao {
     @Insert
-    fun insert(userProfile: UserProfile)
+    suspend fun insert(userProfile: UserProfile)
 
     @Update
-    fun update(userProfile: UserProfile)
+    suspend fun update(userProfile: UserProfile)
 
     @Delete
-    fun delete(userProfile: UserProfile)
+    suspend fun delete(userProfile: UserProfile)
 
     @Query("SELECT * FROM UserProfile WHERE id = :id")
-    fun getUserProfileById(id: Int): UserProfile
+    suspend fun getUserProfileById(id: Int): UserProfile
 
     @Query("SELECT * FROM UserProfile LIMIT 1")
     suspend fun getUserProfile(): UserProfile?

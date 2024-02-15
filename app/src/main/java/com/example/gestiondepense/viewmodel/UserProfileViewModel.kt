@@ -7,14 +7,14 @@ import com.example.gestiondepense.data.database.entity.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class UserProfileViewModel @Inject constructor(private val userProfileRepository: UserProfileRepository) : ViewModel() {
+class UserProfileViewModel(
+    private val userProfileRepository: UserProfileRepository
+) : ViewModel() {
 
     private val _hasProfile = MutableStateFlow(false)
     val hasProfile: StateFlow<Boolean> = _hasProfile
 
-    // Ajoutez un StateFlow pour UserProfile
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile
 
@@ -33,16 +33,25 @@ class UserProfileViewModel @Inject constructor(private val userProfileRepository
     fun createUserProfile(name: String, currency: String, monthlyBudget: Double) {
         val newUserProfile = UserProfile(userName = name, preferredCurrency = currency, monthlyBudget = monthlyBudget)
         viewModelScope.launch {
-            userProfileRepository.insert(newUserProfile)
-            _userProfile.value = newUserProfile
-            _hasProfile.value = true
+            try {
+                userProfileRepository.insert(newUserProfile)
+                _userProfile.value = newUserProfile
+                _hasProfile.value = true
+            } catch (e: Exception) {
+
+            }
         }
     }
 
     fun updateUserProfile(updatedProfile: UserProfile) {
         viewModelScope.launch {
-            userProfileRepository.update(updatedProfile)
-            _userProfile.value = updatedProfile
+            try {
+                userProfileRepository.update(updatedProfile)
+                _userProfile.value = updatedProfile
+            } catch (e: Exception) {
+
+            }
         }
     }
 }
+

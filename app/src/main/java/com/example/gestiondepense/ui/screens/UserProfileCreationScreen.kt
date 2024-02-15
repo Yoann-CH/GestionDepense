@@ -1,18 +1,8 @@
 package com.example.gestiondepense.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -20,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import com.example.gestiondepense.viewmodel.ExchangeRateViewModel
 import com.example.gestiondepense.viewmodel.UserProfileViewModel
 
@@ -34,11 +26,13 @@ fun UserProfileCreationScreen(
         exchangeRateViewModel.fetchExchangeRates("EUR")
     }
 
+    val focusRequester = remember { FocusRequester() }
     val exchangeRates by exchangeRateViewModel.exchangeRates.observeAsState(initial = null)
     var expanded by remember { mutableStateOf(false) }
     var userName by rememberSaveable { mutableStateOf("") }
-    var currency by rememberSaveable { mutableStateOf("") }
+    var currency by rememberSaveable { mutableStateOf("EUR") }
     var monthlyBudget by rememberSaveable { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.padding(16.dp)) {
         TextField(
@@ -49,9 +43,7 @@ fun UserProfileCreationScreen(
 
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = {
-                expanded = !expanded
-            }
+            onExpandedChange = { expanded = !expanded }
         ) {
             TextField(
                 readOnly = true,
@@ -59,13 +51,14 @@ fun UserProfileCreationScreen(
                 onValueChange = { },
                 label = { Text("Currency") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.textFieldColors()
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                modifier = Modifier.focusRequester(focusRequester)
             )
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                exchangeRates?.rates?.keys?.forEach { rate: String ->
+                exchangeRates?.conversion_rates?.keys?.forEach { rate: String ->
                     DropdownMenuItem(
                         text = { Text(rate) },
                         onClick = {
@@ -84,15 +77,28 @@ fun UserProfileCreationScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.height(16.dp))
+
+        errorMessage?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
+        }
+
         Button(
             onClick = {
-                if (userName.isNotEmpty() && currency.isNotEmpty() && monthlyBudget.isNotEmpty()) {
-                    userProfileViewModel.createUserProfile(
-                        name = userName,
-                        currency = currency,
-                        monthlyBudget = monthlyBudget.toDoubleOrNull() ?: 0.0
-                    )
-                    onProfileCreated()
+                if (userName.isEmpty() || currency.isEmpty() || monthlyBudget.isEmpty()) {
+                    errorMessage = "Veuillez remplir tous les champs."
+                } else {
+                    val budget = monthlyBudget.toDoubleOrNull()
+                    if (budget == null) {
+                        errorMessage = "Le budget mensuel doit être un nombre valide."
+                    } else {
+                        errorMessage = null
+                        userProfileViewModel.createUserProfile(
+                            name = userName,
+                            currency = currency,
+                            monthlyBudget = budget
+                        )
+                        onProfileCreated()
+                    }
                 }
             },
             modifier = Modifier.align(Alignment.CenterHorizontally)
