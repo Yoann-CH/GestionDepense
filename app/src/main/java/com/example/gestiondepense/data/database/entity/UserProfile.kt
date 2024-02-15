@@ -8,5 +8,5 @@ data class UserProfile(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userName: String,
     val preferredCurrency: String,
-    val monthlyCeiling: Double
+    val monthlyBudget: Double
 )

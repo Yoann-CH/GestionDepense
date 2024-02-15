@@ -20,4 +20,8 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
     fun getUserProfileById(id: Int): UserProfile {
         return userProfileDao.getUserProfileById(id)
     }
+
+    suspend fun getUserProfile(): UserProfile? {
+        return userProfileDao.getUserProfile()
+    }
 }
