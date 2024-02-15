@@ -11,7 +11,7 @@ import com.example.gestiondepense.data.database.dao.UserProfileDao
 import com.example.gestiondepense.data.database.entity.Expense
 import com.example.gestiondepense.data.database.entity.UserProfile
 
-@Database(entities = [Expense::class, UserProfile::class], version = 2, exportSchema = false)
+@Database(entities = [Expense::class, UserProfile::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao

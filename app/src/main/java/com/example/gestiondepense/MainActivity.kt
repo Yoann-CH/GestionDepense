@@ -1,5 +1,6 @@
 package com.example.gestiondepense
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -28,11 +29,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.gestiondepense.data.database.AppDatabase
-import com.example.gestiondepense.data.network.api.ExchangeRateService
-import com.example.gestiondepense.data.network.client.RetrofitClient.instance
+import com.example.gestiondepense.data.network.client.RetrofitClient
 import com.example.gestiondepense.data.repository.ExpenseRepository
 import com.example.gestiondepense.data.repository.UserProfileRepository
-import com.example.gestiondepense.ui.screens.AddExpenseScreen
+import com.example.gestiondepense.ui.screens.ExpenseScreen
 import com.example.gestiondepense.ui.screens.ExpensesListScreen
 import com.example.gestiondepense.ui.screens.UserProfileCreationScreen
 import com.example.gestiondepense.ui.screens.UserProfileScreen
@@ -53,17 +53,17 @@ class MainActivity : ComponentActivity() {
                 AppNavigation()
             }
         }
-        Log.d(TAG, "L'activité principale est créée.");
+        Log.d(TAG, "L'activité principale est créée.")
     }
 }
 
-
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun AppNavigation() {
     val appDatabase = AppDatabase.getDatabase(context = LocalContext.current)
     val userProfileRepository = UserProfileRepository(appDatabase.userProfileDao())
     val exchangeRateViewModel: ExchangeRateViewModel = viewModel(
-        factory = ExchangeRateViewModelFactory(instance)
+        factory = ExchangeRateViewModelFactory(RetrofitClient.instance)
     )
     val expenseViewModel: ExpenseViewModel = viewModel(
         factory = ExpenseViewModelFactory(ExpenseRepository(appDatabase.expenseDao()))
@@ -73,25 +73,65 @@ fun AppNavigation() {
     )
     val hasProfile by userProfileViewModel.hasProfile.collectAsState(initial = null)
     val navController = rememberNavController()
+    val expenseDetails by expenseViewModel.expenseDetails.collectAsState()
 
     if (hasProfile == null) {
         LoadingScreen()
     } else {
-        val startDestination = if (hasProfile == true) "mainScreen/expensesList" else "profileCreation"
+        val startDestination = if (hasProfile == true) "expensesList" else "profileCreation"
         NavHost(navController = navController, startDestination = startDestination) {
             composable("profileCreation") {
                 UserProfileCreationScreen(
                     userProfileViewModel = userProfileViewModel,
                     exchangeRateViewModel = exchangeRateViewModel,
-                    onProfileCreated = { navController.navigate("mainScreen/expensesList") }
+                    onProfileCreated = { navController.navigate("expensesList") }
                 )
             }
-            composable("mainScreen/{screen}") { backStackEntry ->
-                MainScreen(navController, userProfileViewModel, exchangeRateViewModel, expenseViewModel, backStackEntry.arguments?.getString("screen"))
+            composable("expensesList") {
+                Scaffold(
+                    bottomBar = { BottomNavigationBar(navController = navController) }
+                ) { innerPadding ->
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        ExpensesListScreen(navController, expenseViewModel)
+                    }
+                }
             }
+            composable("profile") {
+                Scaffold(
+                    bottomBar = { BottomNavigationBar(navController = navController) }
+                ) { innerPadding ->
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        UserProfileScreen(userProfileViewModel, exchangeRateViewModel)
+                    }
+                }
+            }
+            composable("addExpense") {
+                Scaffold(
+                    bottomBar = { BottomNavigationBar(navController = navController) }
+                ) { innerPadding ->
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        ExpenseScreen(navController, expenseViewModel, null)
+                    }
+                }
+            }
+            composable("editExpense/{expenseId}") { backStackEntry ->
+                val expenseId = backStackEntry.arguments?.getString("expenseId")?.toIntOrNull()
+                if (expenseId != null) {
+                    expenseViewModel.getExpensesById(expenseId)
+                }
+                Scaffold(
+                    bottomBar = { BottomNavigationBar(navController = navController) }
+                ) { innerPadding ->
+                    Box(modifier = Modifier.padding(innerPadding)) {
+                        ExpenseScreen(navController, expenseViewModel, expenseId)
+                    }
+                }
+            }
+
         }
     }
 }
+
 
 @Composable
 fun LoadingScreen() {
@@ -100,40 +140,20 @@ fun LoadingScreen() {
     }
 }
 
-
-
-@Composable
-fun MainScreen(navController: NavController,userProfileViewModel: UserProfileViewModel, exchangeRateViewModel: ExchangeRateViewModel, expenseViewModel: ExpenseViewModel, screen: String?) {
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController) }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when(screen) {
-                "expensesList" -> ExpensesListScreen(navController, expenseViewModel)
-                "profile" -> UserProfileScreen(userProfileViewModel, exchangeRateViewModel)
-                "addExpense" -> AddExpenseScreen(navController, expenseViewModel)
-                else -> ExpensesListScreen(navController, expenseViewModel)
-            }
-        }
-    }
-}
-
-
-
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     NavigationBar {
         NavigationBarItem(
             icon = { Icon(Icons.Filled.List, "Dépenses") },
             label = { Text("Dépenses") },
-            selected = navController.currentDestination?.route == "mainScreen/expensesList",
-            onClick = { navController.navigate("mainScreen/expensesList") }
+            selected = navController.currentDestination?.route == "expensesList",
+            onClick = { navController.navigate("expensesList") }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Filled.AccountCircle, "Profil") },
             label = { Text("Profil") },
-            selected = navController.currentDestination?.route == "mainScreen/profile",
-            onClick = { navController.navigate("mainScreen/profile") }
+            selected = navController.currentDestination?.route == "profile",
+            onClick = { navController.navigate("profile") }
         )
     }
 }

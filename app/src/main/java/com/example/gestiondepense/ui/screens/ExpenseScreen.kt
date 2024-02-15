@@ -12,22 +12,41 @@ import java.util.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalContext
 import com.example.gestiondepense.data.database.entity.Expense
-import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddExpenseScreen(navController: NavController, expenseViewModel: ExpenseViewModel) {
+fun ExpenseScreen(navController: NavController, expenseViewModel: ExpenseViewModel, expenseId: Int?) {
+    if (expenseId == null) {
+        expenseViewModel.resetExpenseDetails()
+    }
+
+    val expenseDetails by expenseViewModel.expenseDetails.collectAsState()
+    val context = LocalContext.current
+
     var amount by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(Date()) }
     var category by remember { mutableStateOf("loisir") }
     var isFavorite by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+    // Mise à jour des variables d'état après le chargement des détails de la dépense
+    LaunchedEffect(expenseId) {
+        if (expenseId != null) {
+            expenseViewModel.getExpensesById(expenseId)
+        }
+    }
+
+    // Réinitialisation des champs du formulaire basée sur les détails de la dépense chargés
+    LaunchedEffect(expenseDetails) {
+        amount = expenseDetails?.amount?.toString() ?: ""
+        date = expenseDetails?.date ?: Date()
+        category = expenseDetails?.category ?: "loisir"
+        isFavorite = expenseDetails?.isFavorite ?: false
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ajouter une Dépense") }
+                title = { Text(if (expenseId != null) "Modifier une Dépense" else "Ajouter une Dépense") }
             )
         }
     ) { padding ->
@@ -45,7 +64,6 @@ fun AddExpenseScreen(navController: NavController, expenseViewModel: ExpenseView
                 keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
             )
 
-            Text("Date sélectionnée : ${dateFormat.format(date)}")
             Button(onClick = {
                 showDatePicker(context, date) { selectedDate ->
                     date = selectedDate
@@ -99,11 +117,16 @@ fun AddExpenseScreen(navController: NavController, expenseViewModel: ExpenseView
 
             Button(
                 onClick = {
-                    expenseViewModel.insert(Expense(amount = amount.toDouble(), date = date, category = category, isFavorite = isFavorite))
+                    if (expenseId != null) {
+                        expenseViewModel.update(Expense(amount = amount.toDouble(), date = date, category = category, isFavorite = isFavorite))
+                    } else {
+                        expenseViewModel.insert(Expense(amount = amount.toDouble(), date = date, category = category, isFavorite = isFavorite))
+                    }
+                    navController.navigate("expensesList")
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Ajouter")
+                Text(if (expenseId != null) "Modifier" else "Ajouter")
             }
         }
     }

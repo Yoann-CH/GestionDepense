@@ -21,7 +21,7 @@ class ExpenseRepository(private val expenseDao: ExpenseDao) {
         return expenseDao.getAllExpenses()
     }
 
-    suspend fun getExpenseById(id: Int): Expense {
+    suspend fun getExpenseById(id: Int?): Expense {
         return expenseDao.getExpenseById(id)
     }
 

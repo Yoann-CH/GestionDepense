@@ -11,7 +11,7 @@ import java.util.Date
 @Dao
 interface ExpenseDao {
     @Insert
-    suspend fun insert(expense: Expense): Long
+    suspend fun insert(expense: Expense)
 
     @Update
     suspend fun update(expense: Expense)
@@ -23,7 +23,7 @@ interface ExpenseDao {
     suspend fun getAllExpenses(): List<Expense>
 
     @Query("SELECT * FROM Expense WHERE id = :id")
-    suspend fun getExpenseById(id: Int): Expense
+    suspend fun getExpenseById(id: Int?): Expense
 
     @Query("SELECT * FROM Expense WHERE category = :category")
     suspend fun getExpensesByCategory(category: String): List<Expense>
